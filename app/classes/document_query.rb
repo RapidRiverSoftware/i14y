@@ -7,12 +7,15 @@ class DocumentQuery
     post_tags: ["\ue001"]
   }
 
+  attr_reader :query
+
   def initialize(options)
     @options = options
-    if options[:query]
-      site_params_parser = QueryParser.new(options[:query])
+    @query = options[:query]
+    if query
+      site_params_parser = QueryParser.new(query)
       @site_filters = site_params_parser.site_filters
-      @options[:query] = site_params_parser.remaining_query
+      @options[:query] = site_params_parser.remaining_query #fixme
     end
   end
 
