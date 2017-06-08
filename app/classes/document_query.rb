@@ -7,11 +7,12 @@ class DocumentQuery
     post_tags: ["\ue001"]
   }
 
-  attr_reader :query, :query_string
+  attr_reader :query, :query_string, :language
 
   def initialize(options)
     @options = options
     @query = options[:query]
+    @language = @options[:language]
     if query
       site_params_parser = QueryParser.new(query)
       @site_filters = site_params_parser.site_filters
@@ -83,7 +84,7 @@ class DocumentQuery
 
   def musts(json)
     json.must do
-      filter_on_language(json) if @options[:language].present?
+      filter_on_language(json) if language.present?
       filter_on_sites(json) if @site_filters.present?
       filter_on_tags(json, @options[:tags], :and) if @options[:tags].present?
       filter_on_time(json) if timestamp_filters_present?
@@ -91,7 +92,7 @@ class DocumentQuery
   end
 
   def filter_on_language(json)
-    child_term_filter(json, :language, @options[:language])
+    child_term_filter(json, :language, language)
   end
 
   def filter_on_time(json)
@@ -199,7 +200,7 @@ class DocumentQuery
 
   def common_terms(json, field)
     json.common do
-      json.set! [field, @options[:language]].compact.join('_') do
+      json.set! [field, language].compact.join('_') do
         json.query query_string
         json.cutoff_frequency 0.05
         json.minimum_should_match do
@@ -220,9 +221,9 @@ class DocumentQuery
 
   def highlight_fields(json)
     json.fields do
-      json.set! ['title',@options[:language]].compact.join('_'), { number_of_fragments: 0 }
-      json.set! ['description',@options[:language]].compact.join('_'), { fragment_size: 75, number_of_fragments: 2 }
-      json.set! ['content',@options[:language]].compact.join('_'), { fragment_size: 75, number_of_fragments: 2 }
+      json.set! ['title',language].compact.join('_'), { number_of_fragments: 0 }
+      json.set! ['description',language].compact.join('_'), { fragment_size: 75, number_of_fragments: 2 }
+      json.set! ['content',language].compact.join('_'), { fragment_size: 75, number_of_fragments: 2 }
 
     end
   end
@@ -258,7 +259,7 @@ class DocumentQuery
         json.multi_match do
           json.query "{{suggestion}}"
           json.type "phrase"
-          json.fields "*_#{@options[:language]}"
+          json.fields "*_#{language}"
         end
       end
     end
