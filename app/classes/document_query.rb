@@ -10,8 +10,10 @@ class DocumentQuery
   attr_reader :query, :query_string, :language
 
   def initialize(options)
+    puts "initializing DQ with options: #{options}"
     @options = options
     @query = options[:query]
+    puts "original @query in DQ: #{query}"
     @language = @options[:language]
     if query
       site_params_parser = QueryParser.new(query)
@@ -19,8 +21,8 @@ class DocumentQuery
       @query_string = site_params_parser.remaining_query #fixme
       #@options[:query] = site_params_parser.remaining_query #fixme
     end
+    puts "original @query after parsing: #{query}"
 
-    puts body
   end
 
   def body
@@ -28,6 +30,7 @@ class DocumentQuery
     # https://github.com/elastic/elasticsearch-ruby/tree/master/elasticsearch-dsl
     puts "query: #{query}"
     puts "query_string: #{query_string}"
+    puts "options when body-ing: #{@options}"
     Jbuilder.encode do |json|
       source_fields(json)
       sort_by_date(json) if @options[:sort_by_date]
