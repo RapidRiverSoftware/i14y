@@ -270,12 +270,12 @@ class DocumentQuery
 
   private
 
-  def child_match(json, field, query, operator = :and)
+  def child_match(json, field, string, operator = :and)
     json.child! do
       json.match do
         json.set! field do
           json.operator operator
-          json.query query_string
+          json.query string
         end
       end
     end if query_string
