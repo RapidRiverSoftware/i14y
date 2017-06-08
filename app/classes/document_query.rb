@@ -50,7 +50,7 @@ class DocumentQuery
   def filtered_query(json)
     json.query do
       json.filtered do
-        filtered_query_query(json) if @options[:query].present?
+        filtered_query_query(json) if @options[:query].present? #BREAKER
         filtered_query_filter(json)
       end
     end
@@ -153,13 +153,13 @@ class DocumentQuery
   end
 
   def prefer_bigram_matches(json)
-    child_match(json, :bigrams, @options[:query])
+    child_match(json, :bigrams, query)
   end
 
   def prefer_word_form_matches(json)
     json.child! do
       json.multi_match do
-        json.query @options[:query]
+        json.query query
         json.fields FULLTEXT_FIELDS
       end
     end
@@ -223,7 +223,7 @@ class DocumentQuery
 
   def suggest(json)
     json.suggest do
-      json.text @options[:query]
+      json.text query
       json.suggestion do
         phrase_suggestion(json)
       end
