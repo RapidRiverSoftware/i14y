@@ -18,11 +18,15 @@ class DocumentQuery
       @query_string = site_params_parser.remaining_query #fixme
       #@options[:query] = site_params_parser.remaining_query #fixme
     end
+
+    puts body
   end
 
   def body
     # At some point, we should probably refactor this class to use the elasticsearch-dsl library:
     # https://github.com/elastic/elasticsearch-ruby/tree/master/elasticsearch-dsl
+    puts "query: #{query}"
+    puts "query_string: #{query_string}"
     Jbuilder.encode do |json|
       source_fields(json)
       sort_by_date(json) if @options[:sort_by_date]
@@ -189,6 +193,7 @@ class DocumentQuery
   end
 
   def tag_matches(json)
+    #bad? {"match"=>{"tags"=>{"operator"=>"and", "query"=>"Stats"}}}]}}
     child_match(json, :tags, query_string.downcase)
   end
 
