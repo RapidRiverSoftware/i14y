@@ -7,7 +7,7 @@ class DocumentQuery
     post_tags: ["\ue001"]
   }
 
-  attr_reader :query
+  attr_reader :query, :query_string
 
   def initialize(options)
     @options = options
@@ -15,7 +15,8 @@ class DocumentQuery
     if query
       site_params_parser = QueryParser.new(query)
       @site_filters = site_params_parser.site_filters
-      @options[:query] = site_params_parser.remaining_query #fixme
+      @query_string = site_params_parser.remaining_query #fixme
+      #@options[:query] = site_params_parser.remaining_query #fixme
     end
   end
 
@@ -26,7 +27,7 @@ class DocumentQuery
       source_fields(json)
       sort_by_date(json) if @options[:sort_by_date]
       filtered_query(json)
-      if @options[:query].present?
+      if query_string.present?
         highlight(json)
         suggest(json)
       end
@@ -50,7 +51,7 @@ class DocumentQuery
   def filtered_query(json)
     json.query do
       json.filtered do
-        filtered_query_query(json) if @options[:query].present? #BREAKER
+        filtered_query_query(json) if query_string.present? #BREAKER
         filtered_query_filter(json)
       end
     end
@@ -153,13 +154,13 @@ class DocumentQuery
   end
 
   def prefer_bigram_matches(json)
-    child_match(json, :bigrams, query)
+    child_match(json, :bigrams, query_string)
   end
 
   def prefer_word_form_matches(json)
     json.child! do
       json.multi_match do
-        json.query query
+        json.query query_string
         json.fields FULLTEXT_FIELDS
       end
     end
@@ -184,17 +185,17 @@ class DocumentQuery
   end
 
   def basename_matches(json)
-    child_match(json, :basename, @options[:query])
+    child_match(json, :basename, query_string)
   end
 
   def tag_matches(json)
-    child_match(json, :tags, @options[:query].downcase)
+    child_match(json, :tags, query_string.downcase)
   end
 
   def common_terms(json, field)
     json.common do
       json.set! [field, @options[:language]].compact.join('_') do
-        json.query @options[:query]
+        json.query query_string
         json.cutoff_frequency 0.05
         json.minimum_should_match do
           json.low_freq "3<90%"
@@ -223,7 +224,7 @@ class DocumentQuery
 
   def suggest(json)
     json.suggest do
-      json.text query
+      json.text query_string
       json.suggestion do
         phrase_suggestion(json)
       end
@@ -269,10 +270,10 @@ class DocumentQuery
       json.match do
         json.set! field do
           json.operator operator
-          json.query query
+          json.query query_string
         end
       end
-    end if query
+    end if query_string
   end
 
   def child_term_filter(json, field, value)
